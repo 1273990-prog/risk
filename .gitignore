@@ -1,0 +1,11 @@
+# 환경변수 (비밀정보 포함)
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/

@@ -1,0 +1,16 @@
+# 기존 패키지
+requests>=2.31.0
+psycopg2-binary>=2.9.9
+
+# FastAPI 서버
+fastapi>=0.111.0
+uvicorn>=0.30.0
+
+# 환경변수 (.env 파일 자동 로드)
+python-dotenv>=1.0.0
+
+# LLM 클라이언트 (OpenAI 호환 — LM Studio 연동용)
+openai>=1.30.0
+
+# 스케줄러
+apscheduler>=3.10.0
