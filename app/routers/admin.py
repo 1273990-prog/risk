@@ -42,7 +42,6 @@ async def create_api_key(request: ApiKeyCreateRequest):
             "api_key_hash": api_key_hash,
             "api_key_prefix": api_key_prefix,
             "client_name": request.client_name,
-            "client_contact": request.client_contact,
             "is_active": True,
             "rate_limit": request.rate_limit,
             "expires_at": expires_at,

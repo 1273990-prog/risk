@@ -67,11 +67,11 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
     "INSERT_API_KEY": """
                         INSERT INTO api_keys
                             (rule_no, api_key_hash, api_key_prefix, client_name,
-                             client_contact, is_active, rate_limit, expires_at,
+                             is_active, rate_limit, expires_at,
                              last_used_at, total_requests, created_at)
                         VALUES
                             (%(rule_no)s, %(api_key_hash)s, %(api_key_prefix)s,
-                             %(client_name)s, %(client_contact)s,
+                             %(client_name)s,
                              %(is_active)s::BOOLEAN, %(rate_limit)s::INTEGER,
                              %(expires_at)s, %(last_used_at)s,
                              %(total_requests)s::INTEGER, NOW())
@@ -91,7 +91,7 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
                         """,
 
     "SELECT_ALL_API_KEYS": """
-                        SELECT rule_no, api_key_prefix, client_name, client_contact,
+                        SELECT rule_no, api_key_prefix, client_name,
                                is_active, rate_limit, expires_at, last_used_at,
                                total_requests, created_at
                         FROM api_keys
@@ -102,12 +102,12 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
 
     "INSERT_RISK_REQUEST": """
                         INSERT INTO risk_request
-                            (rule_no, domain_id, api_key_id, subject,
+                            (rule_no, domain_id, subject,
                              request_type, status, total_threats, model_name,
                              prompt_tokens, completion_tokens, elapsed_ms,
                              created_at, completed_at)
                         VALUES
-                            (%(rule_no)s, %(domain_id)s, %(api_key_id)s, %(subject)s,
+                            (%(rule_no)s, %(domain_id)s, %(subject)s,
                              %(request_type)s, %(status)s, %(total_threats)s::INTEGER,
                              %(model_name)s, %(prompt_tokens)s::INTEGER,
                              %(completion_tokens)s::INTEGER, %(elapsed_ms)s::INTEGER,
@@ -144,11 +144,11 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
 
     "INSERT_RISK_RESULT": """
                         INSERT INTO risk_result
-                            (rule_no, request_no, seq, threat_name, category,
+                            (rule_no, group_no, seq, threat_name, category,
                              risk_level, likelihood, impact, risk_score,
                              description, mitigation, legal_basis, created_at)
                         VALUES
-                            (%(rule_no)s, %(request_no)s, %(seq)s::INTEGER,
+                            (%(rule_no)s, %(group_no)s, %(seq)s::INTEGER,
                              %(threat_name)s, %(category)s,
                              %(risk_level)s, %(likelihood)s, %(impact)s,
                              %(risk_score)s::INTEGER,
@@ -158,7 +158,7 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
     "SELECT_RISK_RESULTS_BY_REQUEST": """
                         SELECT *
                         FROM risk_result
-                        WHERE request_no = %(request_no)s
+                        WHERE group_no = %(group_no)s
                         ORDER BY seq
                         """,
 }

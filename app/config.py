@@ -13,7 +13,7 @@ class AppConfig:
     """
 
     # ─── 데이터베이스 ───
-    DB_HOST: str = "192.168.10.20"
+    DB_HOST: str = "localhost"
     DB_PORT: str = "5432"
     DB_NAME: str = "risk_assessment"
     DB_USER: str = "risk_user"
@@ -25,7 +25,7 @@ class AppConfig:
     LLM_TEMPERATURE: str = "0.3"
 
     # ─── API 서버 ───
-    API_SERVER_HOST: str = "0.0.0.0"
+    API_SERVER_HOST: str = "localhost"
     API_SERVER_PORT: str = "8443"
 
     # ─── 관리자 인증 (Admin Secret Key) ───

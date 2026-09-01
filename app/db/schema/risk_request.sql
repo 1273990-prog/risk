@@ -1,9 +1,8 @@
 -- 평가 요청 테이블
 -- "누가, 언제, 무엇을 평가 요청했는가"를 기록합니다.
 CREATE TABLE IF NOT EXISTS risk_request (
-    rule_no             VARCHAR(80)     PRIMARY KEY,
-    domain_id           VARCHAR(50)     NOT NULL,               -- 도메인 식별자
-    api_key_id          VARCHAR(80),                            -- 요청한 API Key의 rule_no
+    rule_no             VARCHAR(51)     PRIMARY KEY,
+    domain_id           VARCHAR(40)     NOT NULL,               -- 도메인 식별자
     subject             TEXT            NOT NULL,               -- 평가 주제 (예: FastAPI 서버 탈취)
     request_type        VARCHAR(20)     DEFAULT 'REALTIME',     -- REALTIME, BATCH, REGENERATE
     status              VARCHAR(20)     DEFAULT 'PENDING',      -- PENDING, PROCESSING, COMPLETED, FAILED
