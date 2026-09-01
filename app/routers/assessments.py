@@ -26,7 +26,6 @@ async def evaluate(
         domain_id=request.domain,
         subject=request.subject,
         request_type=RiskConstants.REALTIME,
-        api_key_id=key_info.get("rule_no", ""),
     )
 
     # 결과를 응답 모델에 맞게 변환
@@ -109,7 +108,7 @@ async def get_result(
     db_conn2 = DbConn(json.dumps(net_value))
     query_data2 = json.dumps({
         "query_key": "SELECT_RISK_RESULTS_BY_REQUEST",
-        "params": {"request_no": request_id},
+        "params": {"group_no": request_id},
     })
     db_conn2.create_request(query_data2)
     items_result = json.loads(db_conn2.create_response())

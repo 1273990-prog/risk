@@ -50,7 +50,6 @@ class RiskEngine:
         domain_id: str,
         subject: str,
         request_type: str = RiskConstants.REALTIME,
-        api_key_id: str = "",
     ) -> dict:
         """위험성 평가를 실행합니다.
 
@@ -66,7 +65,6 @@ class RiskEngine:
             domain_id: 도메인 식별자 (예: SECURITY)
             subject: 평가 주제 (예: FastAPI 서버 탈취)
             request_type: 요청 유형 (REALTIME, BATCH, REGENERATE)
-            api_key_id: 요청한 API Key의 rule_no
 
         Returns:
             평가 요청 정보 + 결과 목록 딕셔너리
@@ -79,7 +77,6 @@ class RiskEngine:
             self._run_sql(RiskConstants.INSERT, "INSERT_RISK_REQUEST", {
                 "rule_no": request_no,
                 "domain_id": domain_id,
-                "api_key_id": api_key_id or None,
                 "subject": subject,
                 "request_type": request_type,
                 "status": RiskConstants.PENDING,
@@ -139,7 +136,7 @@ class RiskEngine:
 
                 self._run_sql(RiskConstants.INSERT, "INSERT_RISK_RESULT", {
                     "rule_no": RiskUtils.get_rule_no(),
-                    "request_no": request_no,
+                    "group_no": request_no,
                     "seq": idx,
                     "threat_name": item.get("threat_name", ""),
                     "category": item.get("category", ""),
@@ -220,8 +217,9 @@ class RiskEngine:
 
         # ② 응답 파싱
         content = llm_response.get("content", "")
+        cleaned = self._clean_json_text(content)
         try:
-            knowledge = json.loads(content)
+            knowledge = json.loads(cleaned)
         except json.JSONDecodeError:
             knowledge = {"standards": "", "legal_references": "", "risk_categories": ""}
 
@@ -254,10 +252,24 @@ class RiskEngine:
         }
 
     @staticmethod
+    def _clean_json_text(content: str) -> str:
+        """마크다운 코드 블록(```json ... ```)이나 앞뒤 공백을 제거합니다."""
+        text = content.strip()
+        if text.startswith("```"):
+            lines = text.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+        return text
+
+    @staticmethod
     def _parse_risk_items(content: str) -> list:
         """LLM 응답 텍스트에서 위험 항목 JSON 배열을 추출합니다."""
+        cleaned = RiskEngine._clean_json_text(content)
         try:
-            parsed = json.loads(content)
+            parsed = json.loads(cleaned)
             # 최상위가 리스트인 경우
             if isinstance(parsed, list):
                 return parsed

@@ -71,7 +71,7 @@ class GemmaClient(BaseLLMClient):
                         {"role": "user", "content": user_prompt},
                     ],
                     temperature=temperature,
-                    response_format={"type": "json_object"},
+                    # response_format={"type": "json_object"},
                 )
 
                 # 응답 파싱
