@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS risk_result (
     rule_no         VARCHAR(51)     PRIMARY KEY,
     group_no        VARCHAR(51)     NOT NULL REFERENCES risk_request(rule_no),   -- 평가 요청 FK
     seq             INTEGER         NOT NULL,               -- 항목 순번
-    threat_name     VARCHAR(100)    NOT NULL,               -- 위험 항목명
-    category        VARCHAR(40),                            -- 위험 분류 (도메인 카테고리 중 선택)
+    threat_name     TEXT            NOT NULL,               -- 위험 항목명
+    category        TEXT,                                   -- 위험 분류 (도메인 카테고리 중 선택)
     risk_level      VARCHAR(40),                            -- 위험도 (상/중/하)
     likelihood      VARCHAR(40),                            -- 발생 가능성 (높음/중간/낮음)
     impact          VARCHAR(40),                            -- 영향도 (높음/중간/낮음)
