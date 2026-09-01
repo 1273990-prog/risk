@@ -5,10 +5,15 @@
 __pycache__/
 *.pyc
 *.pyo
+.venv/
+venv/
 
 # IDE
 .idea/
 .vscode/
+
+# macOS
+.DS_Store
 
 # 로그 (LOG_DIR 기본값 및 절대경로 모두 대응)
 logs/
