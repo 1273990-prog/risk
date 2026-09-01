@@ -4,9 +4,12 @@ from typing import Dict, Any, Optional
 
 from app.common.db_conn import DbConn
 from app.common.constants import RiskConstants
+from app.common.logger import get_logger
 from app.common.utils import RiskUtils
 from app.llm import create_llm_client
 from app.prompt.prompt_builder import PromptBuilder
+
+logger = get_logger(__name__)
 
 
 class RiskEngine:
@@ -280,5 +283,5 @@ class RiskEngine:
                         return value
             return []
         except json.JSONDecodeError:
-            print(f"  [경고] LLM 응답 JSON 파싱 실패: {content[:200]}")
+            logger.warning(f"[Engine] LLM 응답 JSON 파싱 실패: {content[:200]}")
             return []

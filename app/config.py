@@ -15,8 +15,8 @@ class AppConfig:
     # ─── 데이터베이스 ───
     DB_HOST: str = "localhost"
     DB_PORT: str = "5432"
-    DB_NAME: str = "risk_assessment"
-    DB_USER: str = "risk_user"
+    DB_NAME: str = "risk"
+    DB_USER: str = "career"
     DB_PASSWORD: str = ""
 
     # ─── LLM (LM Studio) ───
@@ -34,6 +34,11 @@ class AppConfig:
     # ─── Rate Limit ───
     RATE_LIMIT_PER_MINUTE: str = "30"
 
+    # ─── 로깅 ───
+    LOG_LEVEL: str = "DEBUG"          # DEBUG / INFO / WARNING / ERROR / OFF
+    LOG_FILE_ENABLED: str = "false"   # 파일 저장 여부 (true / false)
+    LOG_DIR: str = "logs"            # 로그 파일 저장 경로
+
     @classmethod
     def load(cls) -> "AppConfig":
         """환경변수에서 설정값을 로드합니다. 미설정 시 기본값을 사용합니다."""
@@ -50,6 +55,9 @@ class AppConfig:
             API_SERVER_PORT=os.environ.get("API_SERVER_PORT", cls.API_SERVER_PORT),
             ADMIN_SECRET_KEY=os.environ.get("ADMIN_SECRET_KEY", cls.ADMIN_SECRET_KEY),
             RATE_LIMIT_PER_MINUTE=os.environ.get("RATE_LIMIT_PER_MINUTE", cls.RATE_LIMIT_PER_MINUTE),
+            LOG_LEVEL=os.environ.get("LOG_LEVEL", cls.LOG_LEVEL),
+            LOG_FILE_ENABLED=os.environ.get("LOG_FILE_ENABLED", cls.LOG_FILE_ENABLED),
+            LOG_DIR=os.environ.get("LOG_DIR", cls.LOG_DIR),
         )
 
     def get_db_net_value(self, action: str = "SELECT") -> dict:

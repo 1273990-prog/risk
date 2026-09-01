@@ -2,8 +2,11 @@ import json
 from fastapi import Request, HTTPException
 
 from app.common.db_conn import DbConn
+from app.common.logger import get_logger
 from app.common.utils import RiskUtils
 from app.config import AppConfig
+
+logger = get_logger(__name__)
 
 
 async def verify_api_key(request: Request) -> dict:
@@ -63,7 +66,7 @@ async def verify_api_key(request: Request) -> dict:
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[오류] API Key 인증 처리 실패: {e}")
+        logger.error(f"[인증] API Key 인증 처리 실패: {e}")
         raise HTTPException(status_code=500, detail="인증 처리 중 오류가 발생했습니다")
 
 
@@ -91,7 +94,7 @@ async def verify_admin_key(request: Request) -> str:
 
     config = AppConfig.load()
     if not config.ADMIN_SECRET_KEY:
-        print("[오류] 서버 환경변수에 ADMIN_SECRET_KEY가 설정되지 않았습니다.")
+        logger.error("[인증] 서버 환경변수에 ADMIN_SECRET_KEY가 설정되지 않았습니다.")
         raise HTTPException(
             status_code=500,
             detail="서버 관리자 인증 설정이 완료되지 않았습니다",

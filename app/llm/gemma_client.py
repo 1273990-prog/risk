@@ -4,6 +4,9 @@ from typing import Dict, Any, Optional
 from openai import OpenAI
 
 from app.llm.base_client import BaseLLMClient
+from app.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class GemmaClient(BaseLLMClient):
@@ -31,8 +34,7 @@ class GemmaClient(BaseLLMClient):
             api_key="lm-studio",
         )
 
-        print(f"  [Gemma 초기화] 서버: {base_url}")
-        print(f"  [Gemma 초기화] 모델: {model}")
+        logger.info(f"[LLM] Gemma 초기화 - 서버: {base_url}, 모델: {model}")
 
     @property
     def model_name(self) -> str:
@@ -88,12 +90,12 @@ class GemmaClient(BaseLLMClient):
             except Exception as e:
                 last_exception = e
                 delay = self._RETRY_BASE_DELAY * attempt
-                print(
-                    f"  [재시도] LLM 오류 발생 (시도 {attempt}/{self._MAX_RETRIES}), "
+                logger.warning(
+                    f"[LLM] 호출 오류 (시도 {attempt}/{self._MAX_RETRIES}), "
                     f"{delay}초 대기 후 재시도... (원인: {e})"
                 )
                 time.sleep(delay)
 
         if last_exception:
-            print(f"  [오류] LLM 호출 실패: {last_exception}")
+            logger.error(f"[LLM] 최종 호출 실패 ({self._MAX_RETRIES}회 초과): {last_exception}")
             raise last_exception

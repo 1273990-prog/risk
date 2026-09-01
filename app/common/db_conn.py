@@ -3,6 +3,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Optional, Dict, Any
 from app.common.constants import RiskConstants
+from app.common.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 SAFE_QUERY_REGISTRY: Dict[str, str] = {
     # ─── 도메인 설정 관리 쿼리 ───
@@ -181,7 +185,7 @@ class DbConn:
         try:
             self.__net_value: Dict[str, Any] = json.loads(net_value_json)
         except json.JSONDecodeError as e:
-            print(f"Invalid JSON format: {e}")
+            logger.error(f"[DB] net_value JSON 파싱 실패: {e}")
             raise e
 
         self.__data_value: Optional[Dict[str, Any]] = None
@@ -206,7 +210,7 @@ class DbConn:
         try:
             self.__data_value = json.loads(data_value_json)
         except json.JSONDecodeError as e:
-            print(f"Invalid JSON format: {e}")
+            logger.error(f"[DB] data_value JSON 파싱 실패: {e}")
             raise e
 
         query_key = ""
@@ -220,7 +224,7 @@ class DbConn:
 
             return self.__sql_query
         except Exception as e:
-            print(f"Security Alert: Unauthorized Query Key Requested: {query_key}")
+            logger.error(f"[DB] 보안 경고 - 허가되지 않은 쿼리 키 요청: {query_key}")
             raise e
 
     def _create(self):
@@ -271,16 +275,13 @@ class DbConn:
             return json.dumps(result_data, ensure_ascii=False, default=str)
 
         except psycopg2.Error as e:
-            print("Database Response Exception")
-            if self.__connection is not None:
-                print(f"SQLState: {e.pgcode}")
-                print(f"ErrorMessage: {e.pgerror}")
+            logger.error(f"[DB] 쿼리 실행 예외 발생 - SQLState: {e.pgcode}, 메시지: {e.pgerror}")
             # 트랜잭션 롤백 처리
             if self.__connection:
                 self.__connection.rollback()
             raise e
         except Exception as e:
-            print(f"Failed to create response: {e}")
+            logger.error(f"[DB] 응답 처리 실패: {e}")
             raise e
         finally:
             # 4) 자원 해제 부

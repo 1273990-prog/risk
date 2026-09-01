@@ -9,3 +9,8 @@ __pycache__/
 # IDE
 .idea/
 .vscode/
+
+# 로그 (LOG_DIR 기본값 및 절대경로 모두 대응)
+logs/
+*.log
+*.log.*
