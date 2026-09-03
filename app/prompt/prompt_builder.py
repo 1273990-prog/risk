@@ -5,20 +5,20 @@ class PromptBuilder:
     """
 
     # ─── 공통 출력 형식 지시 (Syntax 고정) ───
-    DEFAULT_OUTPUT_INSTRUCTION = """다음 JSON 배열 형식으로 응답하라. 최소 5개 이상 항목을 제시하라.
-반드시 아래 스키마를 따르는 JSON 배열만 응답하고, 다른 텍스트는 포함하지 마라.
+    DEFAULT_OUTPUT_INSTRUCTION = """다음 JSON 배열 형식으로 응답하라. 정확히 10개 항목을 생성하라. 5개에서 멈추지 마라.
+반드시 아래 스키마를 따르는 JSON 배열만 응답하고, 마크다운·설명문 등 다른 텍스트는 포함하지 마라.
 [
   {
-    "threat_name": "위험 항목명",
-    "category": "위험 분류 (위 카테고리 중 선택)",
-    "risk_level": "상/중/하",
+    "threat_name": "위험 항목명 (중복 금지)",
+    "category": "위험 분류 (위 카테고리 목록 중에서만 선택)",
     "likelihood": "높음/중간/낮음",
     "impact": "높음/중간/낮음",
     "description": "상세 설명 (2~3문장)",
-    "mitigation": "구체적 대응방안",
-    "legal_basis": "관련 법규 조항"
+    "mitigation": "구체적 대응방안 (담당자·조치 단위로)",
+    "legal_basis": "관련 법규 (형식: 법령명 제X조 제X항, 최대 2개, 해당 없으면 빈 문자열)"
   }
-]"""
+]
+위 카테고리를 최소 1회씩 커버하라. 존재하지 않는 법규를 창작하지 마라."""
 
     @staticmethod
     def build_system_prompt(domain_config: dict) -> str:
