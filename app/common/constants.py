@@ -30,6 +30,12 @@ class RiskConstants:
     COMPLETED: Final[str] = "COMPLETED"
     FAILED: Final[str] = "FAILED"
 
+    # ─── 허용값 (런타임 검증용) ───
+    LIKELIHOOD_VALUES: Final = ("높음", "중간", "낮음")
+    IMPACT_VALUES: Final = ("높음", "중간", "낮음")
+    RISK_LEVEL_VALUES: Final = ("상", "중", "하")
+    STATUS_VALUES: Final = ("PENDING", "PROCESSING", "COMPLETED", "FAILED")
+
     # ─── DB Actions ───
     SELECT: Final[str] = "SELECT"
     INSERT: Final[str] = "INSERT"

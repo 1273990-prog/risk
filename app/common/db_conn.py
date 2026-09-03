@@ -127,7 +127,10 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
                             prompt_tokens = %(prompt_tokens)s::INTEGER,
                             completion_tokens = %(completion_tokens)s::INTEGER,
                             elapsed_ms = %(elapsed_ms)s::INTEGER,
-                            completed_at = NOW()
+                            completed_at = CASE
+                                WHEN %(status)s IN ('COMPLETED', 'FAILED') THEN NOW()
+                                ELSE completed_at
+                            END
                         WHERE rule_no = %(rule_no)s
                         """,
 

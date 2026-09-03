@@ -10,6 +10,16 @@ class DomainCreateRequest(BaseModel):
     example_subjects: Optional[str] = Field(default=None, description="Few-shot 예시 주제 (줄바꿈 구분, 미지정 시 없음)")
 
 
+class DomainUpdateRequest(BaseModel):
+    """도메인 수정 요청 스키마 (전부 선택, 미지정은 기존값 유지)"""
+    standards: Optional[str] = None
+    legal_references: Optional[str] = None
+    risk_categories: Optional[str] = None
+    output_instruction: Optional[str] = None
+    example_subjects: Optional[str] = None
+    temperature: Optional[float] = None
+
+
 class DomainConfigResponse(BaseModel):
     """도메인 설정 응답 스키마"""
     rule_no: Optional[str] = None

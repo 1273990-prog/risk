@@ -1,4 +1,7 @@
 import json
+import time
+from collections import deque
+from threading import Lock
 from fastapi import Request, HTTPException
 
 from app.common.db_conn import DbConn
@@ -7,6 +10,30 @@ from app.common.utils import RiskUtils
 from app.config import AppConfig
 
 logger = get_logger(__name__)
+
+# 분당 호출 한도 슬라이딩 윈도우 (키별 타임스탬프, 인메모리)
+# NOTE: 멀티 워커(uvicorn --workers N) 환경에서는 워커별 독립 카운트라
+# 엄밀한 전역 한도가 필요하면 DB/Redis 기반 윈도우로 교체해야 합니다.
+_WINDOW_SECONDS = 60.0
+_hits: dict = {}
+_hits_lock = Lock()
+
+
+def _check_rate_limit(key_id: str, limit: int) -> None:
+    """슬라이딩 윈도우 한도 검사. 초과 시 429를 올립니다."""
+    now = time.monotonic()
+    with _hits_lock:
+        dq = _hits.setdefault(key_id, deque())
+        while dq and now - dq[0] >= _WINDOW_SECONDS:
+            dq.popleft()
+        if len(dq) >= limit:
+            retry_after = int(_WINDOW_SECONDS - (now - dq[0])) + 1
+            raise HTTPException(
+                status_code=429,
+                detail=f"분당 호출 한도({limit}회)를 초과했습니다",
+                headers={"Retry-After": str(retry_after)},
+            )
+        dq.append(now)
 
 
 async def verify_api_key(request: Request) -> dict:
@@ -20,7 +47,7 @@ async def verify_api_key(request: Request) -> dict:
         인증된 API Key 정보 딕셔너리 (rule_no, client_name, rate_limit)
 
     Raises:
-        HTTPException: 401 (키 누락 또는 유효하지 않은 키)
+        HTTPException: 401 (키 누락 또는 유효하지 않은 키), 429 (분당 한도 초과)
     """
     # ① 헤더에서 API Key 추출
     api_key = request.headers.get("X-API-Key")
@@ -51,7 +78,15 @@ async def verify_api_key(request: Request) -> dict:
 
         key_info = key_list[0]
 
-        # ④ 사용량 갱신
+        # ④ 분당 호출 한도 검사 (키별 값 우선, 없으면 전역 기본값, 0 이하면 무제한)
+        try:
+            limit = int(key_info.get("rate_limit") or config.RATE_LIMIT_PER_MINUTE)
+        except (TypeError, ValueError):
+            limit = 30
+        if limit > 0:
+            _check_rate_limit(str(key_info["rule_no"]), limit)
+
+        # ⑤ 사용량 갱신 (한도 통과분만 집계)
         update_net_value = config.get_db_net_value("UPDATE")
         update_conn = DbConn(json.dumps(update_net_value))
         update_data = json.dumps({

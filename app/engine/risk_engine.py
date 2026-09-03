@@ -127,16 +127,27 @@ class RiskEngine:
             )
             llm_response = llm_client.chat(system_prompt, user_prompt, temperature)
 
-            # ⑥ 응답 파싱
+            # ⑥ 응답 파싱 (파싱 실패는 예외→FAILED, 정상 빈 배열은 그대로 진행)
             content = llm_response.get("content", "")
             risk_items = self._parse_risk_items(content)
 
-            # ⑦ risk_result 건별 저장
+            # ⑦ risk_result 건별 저장 (등급·점수는 서버 재계산값으로 통일)
+            # LLM 오타(공백·표기 변형)는 허용값으로 정규화, 범위 밖은 중립값으로 보정
             for idx, item in enumerate(risk_items, start=1):
-                likelihood = item.get("likelihood", "")
-                impact = item.get("impact", "")
+                likelihood = (item.get("likelihood") or "").strip()
+                impact = (item.get("impact") or "").strip()
+                if likelihood not in RiskConstants.LIKELIHOOD_VALUES:
+                    logger.warning(f"[Engine] likelihood 값 보정: {likelihood!r} → '중간'")
+                    likelihood = RiskConstants.LIKELIHOOD_MEDIUM
+                if impact not in RiskConstants.IMPACT_VALUES:
+                    logger.warning(f"[Engine] impact 값 보정: {impact!r} → '중간'")
+                    impact = RiskConstants.IMPACT_MEDIUM
+                item["likelihood"] = likelihood
+                item["impact"] = impact
                 risk_score = RiskUtils.calculate_risk_score(likelihood, impact)
                 risk_level = RiskUtils.determine_risk_level(risk_score)
+                item["risk_score"] = risk_score
+                item["risk_level"] = risk_level
 
                 self._run_sql(RiskConstants.INSERT, "INSERT_RISK_RESULT", {
                     "rule_no": RiskUtils.get_rule_no(),
@@ -153,7 +164,7 @@ class RiskEngine:
                     "legal_basis": item.get("legal_basis", ""),
                 })
 
-            # ⑧ risk_request 상태 완료
+            # ⑧ risk_request 상태 완료 + 저장 행 재조회 (시각은 DB 실값)
             elapsed_ms = int((time.time() - start_time) * 1000)
             self._run_sql(RiskConstants.UPDATE, "UPDATE_RISK_REQUEST_STATUS", {
                 "rule_no": request_no,
@@ -164,6 +175,11 @@ class RiskEngine:
                 "completion_tokens": llm_response.get("completion_tokens", 0),
                 "elapsed_ms": elapsed_ms,
             })
+            stored_result = self._run_sql(
+                RiskConstants.SELECT, "SELECT_RISK_REQUEST_BY_ID", {"rule_no": request_no}
+            )
+            stored_list = json.loads(stored_result)
+            stored_row = stored_list[0] if stored_list and stored_list[0] else {}
 
             return {
                 "rule_no": request_no,
@@ -175,6 +191,8 @@ class RiskEngine:
                 "prompt_tokens": llm_response.get("prompt_tokens", 0),
                 "completion_tokens": llm_response.get("completion_tokens", 0),
                 "elapsed_ms": elapsed_ms,
+                "created_at": str(stored_row.get("created_at", "")) or "",
+                "completed_at": str(stored_row.get("completed_at", "")) or "",
                 "results": risk_items,
             }
 
@@ -250,6 +268,14 @@ class RiskEngine:
             "is_reviewed": False,
         })
 
+        # ④ 저장된 행을 다시 읽어 실제값으로 반환 (기본값·NULL 오표기 방지)
+        stored_result = self._run_sql(
+            RiskConstants.SELECT, "SELECT_DOMAIN_CONFIG_BY_ID", {"domain_id": domain_id}
+        )
+        stored_list = json.loads(stored_result)
+        if stored_list and stored_list[0]:
+            return stored_list[0]
+
         return {
             "rule_no": rule_no,
             "domain_id": domain_id,
@@ -258,7 +284,10 @@ class RiskEngine:
             "standards": knowledge.get("standards", ""),
             "legal_references": knowledge.get("legal_references", ""),
             "risk_categories": knowledge.get("risk_categories", ""),
+            "output_instruction": PromptBuilder.DEFAULT_OUTPUT_INSTRUCTION,
             "example_subjects": example_subjects,
+            "temperature": float(self._config.LLM_TEMPERATURE),
+            "is_active": True,
             "is_reviewed": False,
         }
 
@@ -277,19 +306,30 @@ class RiskEngine:
 
     @staticmethod
     def _parse_risk_items(content: str) -> list:
-        """LLM 응답 텍스트에서 위험 항목 JSON 배열을 추출합니다."""
+        """LLM 응답 텍스트에서 위험 항목 JSON 배열을 추출합니다.
+
+        파싱 실패(깨진 JSON, 예상 밖 형태)는 ValueError를 올려 FAILED 처리하고,
+        정상적으로 파싱된 빈 배열([])은 그대로 반환해 앱 로직에서 처리합니다.
+        """
         cleaned = RiskEngine._clean_json_text(content)
         try:
             parsed = json.loads(cleaned)
-            # 최상위가 리스트인 경우
-            if isinstance(parsed, list):
-                return parsed
-            # 최상위가 딕셔너리이고 내부에 리스트가 있는 경우
-            if isinstance(parsed, dict):
-                for value in parsed.values():
-                    if isinstance(value, list):
-                        return value
-            return []
         except json.JSONDecodeError:
             logger.warning(f"[Engine] LLM 응답 JSON 파싱 실패: {content[:200]}")
-            return []
+            raise ValueError(
+                "[오류] LLM 응답이 유효한 JSON이 아닙니다. "
+                f"(응답 앞부분: {content[:200]})"
+            )
+        # 최상위가 리스트인 경우 (빈 배열 포함)
+        if isinstance(parsed, list):
+            return parsed
+        # 최상위가 딕셔너리이고 내부에 리스트가 있는 경우
+        if isinstance(parsed, dict):
+            for value in parsed.values():
+                if isinstance(value, list):
+                    return value
+        logger.warning(f"[Engine] LLM 응답 형태 오류 (리스트 없음): {content[:200]}")
+        raise ValueError(
+            "[오류] LLM 응답에서 위험 항목 목록을 찾을 수 없습니다. "
+            f"(응답 앞부분: {content[:200]})"
+        )

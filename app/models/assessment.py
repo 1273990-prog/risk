@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Literal, Optional, List
 
 
 class AssessmentRequest(BaseModel):
@@ -13,9 +13,9 @@ class RiskItemResponse(BaseModel):
     seq: int = Field(description="항목 순번")
     threat_name: str = Field(description="위험 항목명")
     category: str = Field(description="위험 분류")
-    risk_level: str = Field(description="위험도 (상/중/하)")
-    likelihood: str = Field(description="발생 가능성 (높음/중간/낮음)")
-    impact: str = Field(description="영향도 (높음/중간/낮음)")
+    risk_level: Literal["상", "중", "하"] = Field(description="위험도 (상/중/하)")
+    likelihood: Literal["높음", "중간", "낮음"] = Field(description="발생 가능성 (높음/중간/낮음)")
+    impact: Literal["높음", "중간", "낮음"] = Field(description="영향도 (높음/중간/낮음)")
     risk_score: int = Field(description="위험 점수 (1~9)")
     description: str = Field(description="상세 설명")
     mitigation: str = Field(description="대응방안")
@@ -27,11 +27,12 @@ class AssessmentResponse(BaseModel):
     rule_no: str = Field(description="평가 요청 고유 식별자")
     domain_id: str = Field(description="도메인 ID")
     subject: str = Field(description="평가 주제")
-    status: str = Field(description="처리 상태 (PENDING/PROCESSING/COMPLETED/FAILED)")
+    status: Literal["PENDING", "PROCESSING", "COMPLETED", "FAILED"] = Field(description="처리 상태 (PENDING/PROCESSING/COMPLETED/FAILED)")
     total_threats: int = Field(default=0, description="도출된 위험 항목 수")
     model_name: Optional[str] = Field(default=None, description="사용된 LLM 모델명")
     prompt_tokens: Optional[int] = Field(default=None, description="입력 토큰 수")
     completion_tokens: Optional[int] = Field(default=None, description="출력 토큰 수")
     elapsed_ms: Optional[int] = Field(default=None, description="처리 소요 시간 (ms)")
     created_at: Optional[str] = None
+    completed_at: Optional[str] = None
     results: List[RiskItemResponse] = Field(default=[], description="위험 항목 목록")

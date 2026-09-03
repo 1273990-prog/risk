@@ -55,6 +55,8 @@ async def evaluate(
         prompt_tokens=result.get("prompt_tokens"),
         completion_tokens=result.get("completion_tokens"),
         elapsed_ms=result.get("elapsed_ms"),
+        created_at=result.get("created_at"),
+        completed_at=result.get("completed_at"),
         results=risk_items,
     )
 
@@ -129,5 +131,6 @@ async def get_result(
         completion_tokens=req_data.get("completion_tokens"),
         elapsed_ms=req_data.get("elapsed_ms"),
         created_at=str(req_data.get("created_at", "")),
+        completed_at=str(req_data.get("completed_at", "")),
         results=risk_items,
     )
