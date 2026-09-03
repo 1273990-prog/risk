@@ -5,27 +5,33 @@ LLM 클라이언트 패키지.
 
 사용 예:
     from app.llm import create_llm_client
-    client = create_llm_client(provider="gemma", base_url="http://localhost:1234/v1")
+    client = create_llm_client(provider="lmstudio", base_url="http://localhost:1234/v1")
     result = client.chat(system_prompt="...", user_prompt="FastAPI 서버 탈취")
+
+    client = create_llm_client(
+        provider="opencode",
+        model="muse-spark-1.3-contributor-free",
+        api_key="...",
+    )
 """
 from app.llm.base_client import BaseLLMClient
-from app.llm.gemma_client import GemmaClient
+from app.llm.lmstudio_client import LmStudioClient
+from app.llm.opencode_client import OpenCodeClient
 
 # 제공자명 → 클라이언트 클래스 매핑 (확장 시 여기에 추가)
 _PROVIDER_REGISTRY = {
-    "gemma": GemmaClient,
-    # "openai": OpenAIClient,      # 향후 추가
-    # "anthropic": AnthropicClient, # 향후 추가
+    "lmstudio": LmStudioClient,
+    "opencode": OpenCodeClient,
 }
 
 
-def create_llm_client(provider: str = "gemma", **kwargs) -> BaseLLMClient:
+def create_llm_client(provider: str = "lmstudio", **kwargs) -> BaseLLMClient:
     """LLM 클라이언트 팩토리 함수.
     provider 문자열만 바꾸면 소비자 코드 변경 없이 LLM을 교체할 수 있습니다.
 
     Args:
-        provider: LLM 제공자 이름 ("gemma" 등)
-        **kwargs: 제공자별 초기화 인자 (예: base_url, model)
+        provider: LLM 제공자 이름 ("lmstudio", "opencode")
+        **kwargs: 제공자별 초기화 인자 (예: base_url, model, api_key)
 
     Returns:
         BaseLLMClient 구현체 인스턴스
@@ -45,6 +51,7 @@ def create_llm_client(provider: str = "gemma", **kwargs) -> BaseLLMClient:
 
 __all__ = [
     "BaseLLMClient",
-    "GemmaClient",
+    "LmStudioClient",
+    "OpenCodeClient",
     "create_llm_client",
 ]

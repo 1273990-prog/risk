@@ -128,7 +128,7 @@ def setup_logger(
 
 # ----------------------------------------------------------
 # [REPLACE: get_logger] 라이브러리 교체 시 반환 타입만 변경하면
-# 각 모듈(db_conn, gemma_client 등)의 코드는 수정 불필요
+# 각 모듈(db_conn, lmstudio_client 등)의 코드는 수정 불필요
 #
 #   loguru 교체 시   → from loguru import logger; return logger
 #   structlog 교체 시 → return structlog.get_logger(name)

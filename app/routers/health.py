@@ -17,9 +17,10 @@ async def health_check():
     llm_ok = False
     try:
         client = create_llm_client(
-            provider="gemma",
+            provider=config.LLM_PROVIDER,
             base_url=config.LLM_BASE_URL,
             model=config.LLM_MODEL,
+            api_key=getattr(config, "LLM_API_KEY", ""),
         )
         llm_ok = client.health_check()
     except Exception:

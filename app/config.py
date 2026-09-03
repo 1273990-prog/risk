@@ -19,10 +19,14 @@ class AppConfig:
     DB_USER: str = "career"
     DB_PASSWORD: str = ""
 
-    # ─── LLM (LM Studio) ───
+    # ─── LLM ───
+    # LLM_PROVIDER: lmstudio(로컬) / opencode(Zen 클라우드)
+    LLM_PROVIDER: str = "lmstudio"
     LLM_BASE_URL: str = "http://localhost:1234/v1"
     LLM_MODEL: str = "gemma-4"
     LLM_TEMPERATURE: str = "0.3"
+    # Zen API 키 (opencode provider 사용 시 필요, 그 외에는 무시)
+    LLM_API_KEY: str = ""
 
     # ─── API 서버 ───
     API_SERVER_HOST: str = "localhost"
@@ -48,9 +52,13 @@ class AppConfig:
             DB_NAME=os.environ.get("DB_NAME", cls.DB_NAME),
             DB_USER=os.environ.get("DB_USER", cls.DB_USER),
             DB_PASSWORD=os.environ.get("DB_PASSWORD", cls.DB_PASSWORD),
+            LLM_PROVIDER=os.environ.get("LLM_PROVIDER", cls.LLM_PROVIDER),
             LLM_BASE_URL=os.environ.get("LLM_BASE_URL", cls.LLM_BASE_URL),
             LLM_MODEL=os.environ.get("LLM_MODEL", cls.LLM_MODEL),
             LLM_TEMPERATURE=os.environ.get("LLM_TEMPERATURE", cls.LLM_TEMPERATURE),
+            LLM_API_KEY=os.environ.get(
+                "LLM_API_KEY", os.environ.get("OPENCODE_ZEN_API_KEY", cls.LLM_API_KEY)
+            ),
             API_SERVER_HOST=os.environ.get("API_SERVER_HOST", cls.API_SERVER_HOST),
             API_SERVER_PORT=os.environ.get("API_SERVER_PORT", cls.API_SERVER_PORT),
             ADMIN_SECRET_KEY=os.environ.get("ADMIN_SECRET_KEY", cls.ADMIN_SECRET_KEY),

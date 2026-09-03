@@ -9,8 +9,8 @@ uvicorn>=0.30.0
 # 환경변수 (.env 파일 자동 로드)
 python-dotenv>=1.0.0
 
-# LLM 클라이언트 (OpenAI 호환 — LM Studio 연동용)
-openai>=1.30.0
+# LLM 클라이언트 (OpenAI 호환 — LM Studio / OpenCode Zen 연동용, Responses API 필요)
+openai>=1.50.0
 
 # 스케줄러
 apscheduler>=3.10.0

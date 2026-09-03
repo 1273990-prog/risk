@@ -120,9 +120,10 @@ class RiskEngine:
             # ⑤ LLM 호출
             temperature = float(domain_config.get("temperature", 0.3))
             llm_client = create_llm_client(
-                provider="gemma",
+                provider=self._config.LLM_PROVIDER,
                 base_url=self._config.LLM_BASE_URL,
                 model=self._config.LLM_MODEL,
+                api_key=getattr(self._config, "LLM_API_KEY", ""),
             )
             llm_response = llm_client.chat(system_prompt, user_prompt, temperature)
 
@@ -212,9 +213,10 @@ class RiskEngine:
         user_prompt = PromptBuilder.build_domain_generation_prompt(role_description)
 
         llm_client = create_llm_client(
-            provider="gemma",
+            provider=self._config.LLM_PROVIDER,
             base_url=self._config.LLM_BASE_URL,
             model=self._config.LLM_MODEL,
+            api_key=getattr(self._config, "LLM_API_KEY", ""),
         )
         llm_response = llm_client.chat(system_prompt, user_prompt, temperature=0.3)
 

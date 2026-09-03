@@ -9,8 +9,8 @@ from app.common.logger import get_logger
 logger = get_logger(__name__)
 
 
-class GemmaClient(BaseLLMClient):
-    """LM Studio + Gemma 4 기반 LLM 클라이언트.
+class LmStudioClient(BaseLLMClient):
+    """LM Studio 기반 로컬 LLM 클라이언트 (기본 모델: Gemma 4).
     OpenAI 호환 API를 사용하여 LM Studio 서버와 통신합니다.
     기존 GeminiEmbeddingClient의 재시도 로직 패턴을 따릅니다.
     """
@@ -18,12 +18,14 @@ class GemmaClient(BaseLLMClient):
     _MAX_RETRIES = 3
     _RETRY_BASE_DELAY = 2  # 일반 오류 재시도 대기시간(초)
 
-    def __init__(self, base_url: str = "http://localhost:1234/v1", model: str = "gemma-4"):
-        """Gemma 클라이언트를 초기화합니다.
+    def __init__(self, base_url: str = "http://localhost:1234/v1", model: str = "gemma-4",
+                 api_key: str = "", **kwargs):
+        """LM Studio 클라이언트를 초기화합니다.
 
         Args:
             base_url: LM Studio 서버 URL (기본값: http://localhost:1234/v1)
             model: 사용할 모델명 (기본값: gemma-4)
+            api_key: 호환용 인자 (무시됨, 팩토리 공통 호출용)
         """
         self._base_url = base_url
         self._model = model
@@ -34,7 +36,7 @@ class GemmaClient(BaseLLMClient):
             api_key="lm-studio",
         )
 
-        logger.info(f"[LLM] Gemma 초기화 - 서버: {base_url}, 모델: {model}")
+        logger.info(f"[LLM] LM Studio 초기화 - 서버: {base_url}, 모델: {model}")
 
     @property
     def model_name(self) -> str:
@@ -45,7 +47,7 @@ class GemmaClient(BaseLLMClient):
         return self._base_url
 
     def chat(self, system_prompt: str, user_prompt: str, temperature: float = 0.3) -> Dict[str, Any]:
-        """LM Studio를 통해 Gemma 4에 채팅 요청을 보냅니다.
+        """LM Studio를 통해 로컬 모델에 채팅 요청을 보냅니다.
         재시도 로직이 포함되어 있습니다.
         """
         return self._chat_with_retry(system_prompt, user_prompt, temperature)

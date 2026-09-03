@@ -4,7 +4,7 @@ from typing import Dict, Any
 
 class BaseLLMClient(ABC):
     """LLM 클라이언트 추상 기반 클래스.
-    모든 LLM 제공자(LM Studio/Gemma, OpenAI 등)는 이 인터페이스를 구현합니다.
+    모든 LLM 제공자(LM Studio, OpenCode Zen 등)는 이 인터페이스를 구현합니다.
     기존 BaseEmbeddingClient 패턴을 따릅니다.
     """
 
