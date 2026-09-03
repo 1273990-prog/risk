@@ -79,6 +79,8 @@ async def list_api_keys():
 @router.delete("/keys/{key_id}")
 async def deactivate_api_key(key_id: str):
     """API Key를 비활성화합니다."""
+    from fastapi import HTTPException
+
     config = AppConfig.load()
     net_value = config.get_db_net_value("UPDATE")
 
@@ -88,6 +90,9 @@ async def deactivate_api_key(key_id: str):
         "params": {"rule_no": key_id},
     })
     db_conn.create_request(query_data)
-    db_conn.create_response()
+    result = json.loads(db_conn.create_response())
+
+    if not result or result.get("affected_rows", 0) == 0:
+        raise HTTPException(status_code=404, detail=f"API Key '{key_id}'를 찾을 수 없습니다")
 
     return {"message": f"API Key '{key_id}' 비활성화 완료"}

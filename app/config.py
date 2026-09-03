@@ -34,6 +34,7 @@ class AppConfig:
     # ─── API 서버 ───
     API_SERVER_HOST: str = "localhost"
     API_SERVER_PORT: str = "8443"
+    API_SERVER_RELOAD: str = "true"     # 개발용 자동 리로드 (운영: false)
 
     # ─── 관리자 인증 (Admin Secret Key) ───
     ADMIN_SECRET_KEY: str = ""
@@ -67,6 +68,7 @@ class AppConfig:
             ),
             API_SERVER_HOST=os.environ.get("API_SERVER_HOST", cls.API_SERVER_HOST),
             API_SERVER_PORT=os.environ.get("API_SERVER_PORT", cls.API_SERVER_PORT),
+            API_SERVER_RELOAD=os.environ.get("API_SERVER_RELOAD", cls.API_SERVER_RELOAD),
             ADMIN_SECRET_KEY=os.environ.get("ADMIN_SECRET_KEY", cls.ADMIN_SECRET_KEY),
             RATE_LIMIT_PER_MINUTE=os.environ.get("RATE_LIMIT_PER_MINUTE", cls.RATE_LIMIT_PER_MINUTE),
             LOG_LEVEL=os.environ.get("LOG_LEVEL", cls.LOG_LEVEL),

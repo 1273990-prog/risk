@@ -72,5 +72,5 @@ if __name__ == "__main__":
         "app.main:app",
         host=config.API_SERVER_HOST,
         port=int(config.API_SERVER_PORT),
-        reload=True,
+        reload=config.API_SERVER_RELOAD.lower() == "true",
     )

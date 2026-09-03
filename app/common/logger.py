@@ -19,8 +19,8 @@ from pathlib import Path
 
 
 def setup_logger(
-    log_level: str = "INFO",
-    log_file_enabled: str = "true",
+    log_level: str = "DEBUG",
+    log_file_enabled: str = "false",
     log_dir: str = "logs",          # ← 파일 경로의 베이스 디렉토리 (환경변수 LOG_DIR)
 ) -> None:
     """애플리케이션 루트 로거를 초기화합니다.

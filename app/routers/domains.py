@@ -125,7 +125,7 @@ async def approve_domain(
 
     db_conn = DbConn(json.dumps(net_value))
     query_data = json.dumps({
-        "query_key": "ACTIVATE_DOMAIN_CONFIG",
+        "query_key": "APPROVE_DOMAIN_CONFIG",
         "params": {"domain_id": domain_id},
     })
     db_conn.create_request(query_data)

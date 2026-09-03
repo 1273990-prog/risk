@@ -36,3 +36,19 @@ class AssessmentResponse(BaseModel):
     created_at: Optional[str] = None
     completed_at: Optional[str] = None
     results: List[RiskItemResponse] = Field(default=[], description="위험 항목 목록")
+
+
+class RiskRequestResponse(BaseModel):
+    """평가 요청 목록 조회 응답 스키마 (risk_request 행)"""
+    rule_no: str
+    domain_id: str
+    subject: str
+    request_type: str = "REALTIME"
+    status: Literal["PENDING", "PROCESSING", "COMPLETED", "FAILED"] = "PENDING"
+    total_threats: int = 0
+    model_name: Optional[str] = None
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    elapsed_ms: Optional[int] = None
+    created_at: Optional[str] = None
+    completed_at: Optional[str] = None

@@ -53,7 +53,7 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
                         WHERE domain_id = %(domain_id)s
                         """,
 
-    "ACTIVATE_DOMAIN_CONFIG": """
+    "APPROVE_DOMAIN_CONFIG": """
                         UPDATE domain_config
                         SET is_reviewed = true, updated_at = NOW()
                         WHERE domain_id = %(domain_id)s

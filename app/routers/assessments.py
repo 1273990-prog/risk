@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from app.auth.api_key import verify_api_key
 from app.config import AppConfig
 from app.engine.risk_engine import RiskEngine
-from app.models.assessment import AssessmentRequest, AssessmentResponse, RiskItemResponse
+from app.models.assessment import AssessmentRequest, AssessmentResponse, RiskItemResponse, RiskRequestResponse
 from app.common.db_conn import DbConn
 from app.common.constants import RiskConstants
 
@@ -61,10 +61,10 @@ async def evaluate(
     )
 
 
-@router.get("/results")
+@router.get("/results", response_model=list[RiskRequestResponse])
 async def list_results(
-    limit: int = Query(default=20, description="조회 건수"),
-    offset: int = Query(default=0, description="시작 위치"),
+    limit: int = Query(default=20, ge=1, le=100, description="조회 건수"),
+    offset: int = Query(default=0, ge=0, description="시작 위치"),
     key_info: dict = Depends(verify_api_key),
 ):
     """평가 요청 목록을 조회합니다."""
@@ -79,7 +79,10 @@ async def list_results(
     db_conn.create_request(query_data)
     result = json.loads(db_conn.create_response())
 
-    return result
+    if not result or not result[0]:
+        return []
+
+    return [RiskRequestResponse(**row) for row in result]
 
 
 @router.get("/results/{request_id}", response_model=AssessmentResponse)

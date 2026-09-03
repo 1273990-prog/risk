@@ -45,7 +45,9 @@ class RiskUtils:
     @staticmethod
     def verify_api_key(api_key: str, stored_hash: str) -> bool:
         """제공된 API Key가 저장된 해시와 일치하는지 검증합니다."""
-        return hashlib.sha256(api_key.encode()).hexdigest() == stored_hash
+        return secrets.compare_digest(
+            hashlib.sha256(api_key.encode()).hexdigest(), stored_hash
+        )
 
     @staticmethod
     def calculate_risk_score(likelihood: str, impact: str) -> int:

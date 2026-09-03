@@ -5,7 +5,6 @@ from typing import Optional
 class ApiKeyCreateRequest(BaseModel):
     """API Key 발급 요청 스키마"""
     client_name: str = Field(description="발급 대상 이름 (예: A사 보안팀)")
-    client_contact: Optional[str] = Field(default=None, description="담당자 연락처")
     rate_limit: int = Field(default=30, description="분당 최대 호출 수")
     expires_days: Optional[int] = Field(default=None, description="만료일 (일 수, None이면 무기한)")
 
@@ -22,7 +21,6 @@ class ApiKeyInfoResponse(BaseModel):
     rule_no: str
     api_key_prefix: str = Field(description="키 앞 8자리 (식별용)")
     client_name: str
-    client_contact: Optional[str] = None
     is_active: bool
     rate_limit: int
     expires_at: Optional[str] = None
