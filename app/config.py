@@ -21,10 +21,13 @@ class AppConfig:
 
     # ─── LLM ───
     # LLM_PROVIDER: lmstudio(로컬) / opencode(Zen 클라우드)
+    # LLM_TEMPERATURE: 위험성 평가용 (정확히 N개 + JSON 안정성)
+    # LLM_DOMAIN_GEN_TEMPERATURE: 도메인 지식 생성용 (창의성 우선, 1회성)
     LLM_PROVIDER: str = "lmstudio"
     LLM_BASE_URL: str = "http://localhost:1234/v1"
     LLM_MODEL: str = "gemma-4"
-    LLM_TEMPERATURE: str = "0.3"
+    LLM_TEMPERATURE: str = "0.4"
+    LLM_DOMAIN_GEN_TEMPERATURE: str = "0.7"
     # Zen API 키 (opencode provider 사용 시 필요, 그 외에는 무시)
     LLM_API_KEY: str = ""
 
@@ -56,6 +59,9 @@ class AppConfig:
             LLM_BASE_URL=os.environ.get("LLM_BASE_URL", cls.LLM_BASE_URL),
             LLM_MODEL=os.environ.get("LLM_MODEL", cls.LLM_MODEL),
             LLM_TEMPERATURE=os.environ.get("LLM_TEMPERATURE", cls.LLM_TEMPERATURE),
+            LLM_DOMAIN_GEN_TEMPERATURE=os.environ.get(
+                "LLM_DOMAIN_GEN_TEMPERATURE", cls.LLM_DOMAIN_GEN_TEMPERATURE
+            ),
             LLM_API_KEY=os.environ.get(
                 "LLM_API_KEY", os.environ.get("OPENCODE_ZEN_API_KEY", cls.LLM_API_KEY)
             ),

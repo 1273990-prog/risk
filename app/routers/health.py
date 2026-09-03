@@ -20,7 +20,7 @@ async def health_check():
             provider=config.LLM_PROVIDER,
             base_url=config.LLM_BASE_URL,
             model=config.LLM_MODEL,
-            api_key=getattr(config, "LLM_API_KEY", ""),
+            api_key=config.LLM_API_KEY,
         )
         llm_ok = client.health_check()
     except Exception:

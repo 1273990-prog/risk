@@ -117,13 +117,13 @@ class RiskEngine:
                 "elapsed_ms": None,
             })
 
-            # ⑤ LLM 호출
-            temperature = float(domain_config.get("temperature", 0.3))
+            # ⑤ LLM 호출 (온도: 도메인 설정값, 없으면 평가 기본값)
+            temperature = float(domain_config.get("temperature") or self._config.LLM_TEMPERATURE)
             llm_client = create_llm_client(
                 provider=self._config.LLM_PROVIDER,
                 base_url=self._config.LLM_BASE_URL,
                 model=self._config.LLM_MODEL,
-                api_key=getattr(self._config, "LLM_API_KEY", ""),
+                api_key=self._config.LLM_API_KEY,
             )
             llm_response = llm_client.chat(system_prompt, user_prompt, temperature)
 
@@ -216,9 +216,12 @@ class RiskEngine:
             provider=self._config.LLM_PROVIDER,
             base_url=self._config.LLM_BASE_URL,
             model=self._config.LLM_MODEL,
-            api_key=getattr(self._config, "LLM_API_KEY", ""),
+            api_key=self._config.LLM_API_KEY,
         )
-        llm_response = llm_client.chat(system_prompt, user_prompt, temperature=0.3)
+        llm_response = llm_client.chat(
+            system_prompt, user_prompt,
+            temperature=float(self._config.LLM_DOMAIN_GEN_TEMPERATURE),
+        )
 
         # ② 응답 파싱
         content = llm_response.get("content", "")
@@ -240,7 +243,7 @@ class RiskEngine:
             "risk_categories": knowledge.get("risk_categories", ""),
             "output_instruction": PromptBuilder.DEFAULT_OUTPUT_INSTRUCTION,
             "example_subjects": None,
-            "temperature": 0.3,
+            "temperature": float(self._config.LLM_TEMPERATURE),
             "is_active": True,
             "is_reviewed": False,
         })
