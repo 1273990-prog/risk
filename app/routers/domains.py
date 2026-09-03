@@ -26,6 +26,7 @@ async def create_domain(
         domain_id=request.domain_id,
         domain_name=request.domain_name,
         role_description=request.role_description,
+        example_subjects=request.example_subjects,
     )
 
     return DomainConfigResponse(**result)

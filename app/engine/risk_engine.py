@@ -196,7 +196,8 @@ class RiskEngine:
             raise e
 
     def generate_domain_knowledge(
-        self, domain_id: str, domain_name: str, role_description: str
+        self, domain_id: str, domain_name: str, role_description: str,
+        example_subjects: Optional[str] = None,
     ) -> dict:
         """Gemma를 통해 도메인 전문 지식을 자동 생성합니다.
 
@@ -204,6 +205,7 @@ class RiskEngine:
             domain_id: 도메인 식별자
             domain_name: 도메인 표시명
             role_description: 전문가 역할 정의
+            example_subjects: Few-shot 예시 주제 (미지정 시 없음)
 
         Returns:
             생성된 도메인 설정 딕셔너리
@@ -242,7 +244,7 @@ class RiskEngine:
             "legal_references": knowledge.get("legal_references", ""),
             "risk_categories": knowledge.get("risk_categories", ""),
             "output_instruction": PromptBuilder.DEFAULT_OUTPUT_INSTRUCTION,
-            "example_subjects": None,
+            "example_subjects": example_subjects,
             "temperature": float(self._config.LLM_TEMPERATURE),
             "is_active": True,
             "is_reviewed": False,
@@ -256,6 +258,7 @@ class RiskEngine:
             "standards": knowledge.get("standards", ""),
             "legal_references": knowledge.get("legal_references", ""),
             "risk_categories": knowledge.get("risk_categories", ""),
+            "example_subjects": example_subjects,
             "is_reviewed": False,
         }
 

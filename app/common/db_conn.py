@@ -30,12 +30,13 @@ SAFE_QUERY_REGISTRY: Dict[str, str] = {
                             (rule_no, domain_id, domain_name, role_description,
                              standards, legal_references, risk_categories,
                              output_instruction, example_subjects,
-                             temperature, is_active, is_reviewed, created_at, updated_at)
+                             temperature, generated_at, is_active, is_reviewed, created_at, updated_at)
                         VALUES
                             (%(rule_no)s, %(domain_id)s, %(domain_name)s, %(role_description)s,
                              %(standards)s, %(legal_references)s, %(risk_categories)s,
                              %(output_instruction)s, %(example_subjects)s,
-                             %(temperature)s::NUMERIC, %(is_active)s::BOOLEAN,
+                             %(temperature)s::NUMERIC, NOW(),
+                             %(is_active)s::BOOLEAN,
                              %(is_reviewed)s::BOOLEAN, NOW(), NOW())
                         """,
 
