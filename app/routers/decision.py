@@ -3,7 +3,7 @@ from contextlib import nullcontext
 from typing import Any, Dict, List, Optional, Union
 
 import torch
-from laya import LayaPipeline
+import laya
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
@@ -95,38 +95,30 @@ class LayaPipelineManager:
         force_reload: bool = False,
         **kwargs: Any,
     ) -> Any:
-        """LayaPipeline을 가속 디바이스(CUDA/MPS) 메모리에 로드합니다."""
+        """Laya Agent를 가속 디바이스(CUDA/MPS) 메모리에 로드합니다."""
         target_model = model_name_or_path or self.model_name_or_path
 
         if self.pipeline is not None and not force_reload and self.model_name_or_path == target_model:
             return self.pipeline
 
         logger.info(
-            f"LayaPipeline 로드 시작 (Model: {target_model}, Device: {self.device}, Dtype: {self.dtype})"
+            f"Laya Agent 로드 시작 (Model: {target_model}, Device: {self.device}, Dtype: {self.dtype})"
         )
 
         try:
-            # from_pretrained 지원 여부에 따른 초기화
-            if hasattr(LayaPipeline, "from_pretrained"):
-                pipeline = LayaPipeline.from_pretrained(
-                    target_model,
-                    torch_dtype=self.dtype,
-                    **kwargs,
-                )
+            device_str = str(self.device)
+            if target_model in ("convaiinnovations/laya-multilingual", "multilingual", "ml"):
+                pipeline = laya.load("convaiinnovations/laya", subfolder="multilingual", device=device_str, **kwargs)
             else:
-                pipeline = LayaPipeline(target_model, **kwargs)
-
-            # 최적 가속 디바이스(CUDA/MPS)로 이동
-            if hasattr(pipeline, "to"):
-                pipeline = pipeline.to(self.device)
+                pipeline = laya.load(target_model, device=device_str, **kwargs)
 
             self.pipeline = pipeline
             self.model_name_or_path = target_model
-            logger.info("LayaPipeline GPU 가속 로드 완료")
+            logger.info("Laya Agent GPU 가속 로드 완료")
             return self.pipeline
 
         except Exception as e:
-            logger.error(f"LayaPipeline 로드 중 오류 발생: {e}", exc_info=True)
+            logger.error(f"Laya Agent 로드 중 오류 발생: {e}", exc_info=True)
             raise e
 
     def get_pipeline(self) -> Any:
@@ -176,26 +168,33 @@ class LayaPipelineManager:
         **kwargs: Any,
     ) -> Any:
         """다양한 Laya API 인터페이스를 지원하여 결정을 호출합니다."""
+        q_payload: Dict[str, Any] = {
+            "type": decision_type,
+            "instructions": question,
+        }
+        if decision_type == "choice":
+            q_payload["criteria"] = options or ["yes", "no"]
+        elif decision_type == "score":
+            q_payload["criteria"] = options or ["1", "2", "3", "4", "5"]
+        elif decision_type == "noul":
+            if options and len(options) >= 2:
+                q_payload["criteria"] = {"false": options[0], "true": options[1]}
+
+        questions_dict = {"decision_q": q_payload}
+
         # 1. system_one (Laya 공식 원샷 결정 인터페이스)
         if hasattr(pipeline, "system_one") and callable(pipeline.system_one):
-            q_payload: Dict[str, Any] = {
-                "id": "decision_q",
-                "type": decision_type,
-                "question": question,
-            }
-            if options:
-                q_payload["options"] = options
-            return pipeline.system_one(state=context, questions=[q_payload], **kwargs)
+            return pipeline.system_one(state=context, questions=questions_dict, **kwargs)
 
         # 2. predict 메서드
         if hasattr(pipeline, "predict") and callable(pipeline.predict):
             try:
                 return pipeline.predict(
-                    context,
-                    questions=[{"type": decision_type, "question": question, "options": options}],
+                    state=context,
+                    questions=questions_dict,
                     **kwargs,
                 )
-            except TypeError:
+            except Exception:
                 pass
 
         # 3. decide 메서드
@@ -232,18 +231,6 @@ class LayaPipelineManager:
         except TypeError:
             pass
 
-        # 5. HuggingFace zero-shot 호환 형태 (candidate_labels)
-        if options:
-            try:
-                return pipeline(
-                    context,
-                    candidate_labels=options,
-                    hypothesis_template=question,
-                    **kwargs,
-                )
-            except TypeError:
-                pass
-
         return pipeline(context, question=question, options=options, **kwargs)
 
     def _format_decision_result(
@@ -255,10 +242,20 @@ class LayaPipelineManager:
         probabilities: Dict[str, float] = {}
 
         if isinstance(raw_result, dict):
-            # Laya system_one 형식: {"decision_q": {"answer": "...", "probabilities": {...}, "answer_confidence": 0.98}}
+            # Laya predict_batch 결과 구조인 경우: {"model": "...", "answers": {...}, "usage": ...}
+            if "answers" in raw_result and isinstance(raw_result["answers"], dict):
+                raw_result = raw_result["answers"]
+
+            # Laya system_one 형식: {"decision_q": {"choice": "...", "probabilities": {...}, "answer_confidence": 0.98}}
             if "decision_q" in raw_result and isinstance(raw_result["decision_q"], dict):
                 sub = raw_result["decision_q"]
-                decision = sub.get("answer") or sub.get("decision")
+                decision = (
+                    sub.get("choice")
+                    or sub.get("answer")
+                    or sub.get("decision")
+                    or (str(sub.get("score")) if "score" in sub else None)
+                    or (str(sub.get("noul")) if "noul" in sub else None)
+                )
                 confidence = sub.get("answer_confidence") or sub.get("confidence")
                 probabilities = sub.get("probabilities", {})
 
@@ -276,6 +273,10 @@ class LayaPipelineManager:
                 decision = raw_result["decision"]
                 confidence = raw_result.get("confidence")
                 probabilities = raw_result.get("probabilities", {})
+            elif "choice" in raw_result:
+                decision = raw_result["choice"]
+                confidence = raw_result.get("answer_confidence") or raw_result.get("confidence")
+                probabilities = raw_result.get("probabilities", {})
             elif "answer" in raw_result:
                 decision = raw_result["answer"]
                 confidence = raw_result.get("answer_confidence") or raw_result.get("confidence")
@@ -284,7 +285,13 @@ class LayaPipelineManager:
             # 단일 중첩 딕셔너리 형태
             elif len(raw_result) == 1 and isinstance(list(raw_result.values())[0], dict):
                 inner = list(raw_result.values())[0]
-                decision = inner.get("answer") or inner.get("decision")
+                decision = (
+                    inner.get("choice")
+                    or inner.get("answer")
+                    or inner.get("decision")
+                    or (str(inner.get("score")) if "score" in inner else None)
+                    or (str(inner.get("noul")) if "noul" in inner else None)
+                )
                 confidence = inner.get("answer_confidence") or inner.get("confidence")
                 probabilities = inner.get("probabilities", {})
             else:

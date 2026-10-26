@@ -14,3 +14,7 @@ openai>=1.50.0
 
 # 스케줄러
 apscheduler>=3.10.0
+
+# Laya 의사결정 모델
+torch>=2.0.0
+laya>=0.4.0
