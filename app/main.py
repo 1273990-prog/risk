@@ -6,7 +6,7 @@ import uvicorn
 
 from app.config import AppConfig
 from app.common.logger import setup_logger, get_logger
-from app.routers import domains, assessments, admin, health
+from app.routers import domains, assessments, admin, health, decision
 
 logger = get_logger(__name__)
 
@@ -64,6 +64,7 @@ app.include_router(health.router)
 app.include_router(domains.router)
 app.include_router(assessments.router)
 app.include_router(admin.router)
+app.include_router(decision.router)
 
 
 if __name__ == "__main__":
