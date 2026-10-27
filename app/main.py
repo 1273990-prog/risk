@@ -6,6 +6,7 @@ import uvicorn
 
 from app.config import AppConfig
 from app.common.logger import setup_logger, get_logger
+from app.decision import create_decision_engine
 from app.routers import domains, assessments, admin, health, decision
 
 logger = get_logger(__name__)
@@ -13,7 +14,7 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """서비스 시작 시 로거를 초기화하고 설정 정보를 출력합니다."""
+    """서비스 시작 시 로거를 초기화하고, 의사결정 엔진을 로드합니다."""
     config = AppConfig.load()
     setup_logger(
         log_level=config.LOG_LEVEL,
@@ -24,13 +25,24 @@ async def lifespan(app: FastAPI):
     logger.info(f"[설정] LLM: {config.LLM_BASE_URL} / Model: {config.LLM_MODEL}")
     logger.info(f"[설정] DB: {config.DB_HOST}:{config.DB_PORT}/{config.DB_NAME}")
     logger.info(f"[설정] LOG_LEVEL={config.LOG_LEVEL}, LOG_FILE_ENABLED={config.LOG_FILE_ENABLED}")
+
+    # 의사결정 엔진 초기화 (Laya / 확장 엔진)
+    decision_engine = create_decision_engine(config.DECISION_ENGINE)
+    decision_engine.initialize()
+    app.state.decision_engine = decision_engine
+    logger.info(f"Decision Engine ({config.DECISION_ENGINE}) 초기화 완료")
+
     yield
+
+    # 서버 종료 시 GPU 캐시 정리
+    decision_engine.clear_cache()
+    logger.info("Decision Engine 정리 완료")
 
 
 # FastAPI 앱 생성
 app = FastAPI(
     title="Risk Assessment Service",
-    description="Gemma 4 기반 위험성 평가 API 서비스",
+    description="LLM 기반 위험성 평가 API 서비스",
     version="1.0.0",
     lifespan=lifespan,
 )

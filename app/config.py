@@ -47,6 +47,10 @@ class AppConfig:
     LOG_FILE_ENABLED: str = "false"   # 파일 저장 여부 (true / false)
     LOG_DIR: str = "logs"            # 로그 파일 저장 경로
 
+    # ─── 의사결정 (Decision Engine) ───
+    DECISION_ENGINE: str = "laya"         # 의사결정 엔진 제공자 (laya 등)
+    DECISION_INCLUDE_RAW: str = "false"   # 응답에 원본(raw) 포함 여부 (디버깅용)
+
     @classmethod
     def load(cls) -> "AppConfig":
         """환경변수에서 설정값을 로드합니다. 미설정 시 기본값을 사용합니다."""
@@ -74,6 +78,8 @@ class AppConfig:
             LOG_LEVEL=os.environ.get("LOG_LEVEL", cls.LOG_LEVEL),
             LOG_FILE_ENABLED=os.environ.get("LOG_FILE_ENABLED", cls.LOG_FILE_ENABLED),
             LOG_DIR=os.environ.get("LOG_DIR", cls.LOG_DIR),
+            DECISION_ENGINE=os.environ.get("DECISION_ENGINE", cls.DECISION_ENGINE),
+            DECISION_INCLUDE_RAW=os.environ.get("DECISION_INCLUDE_RAW", cls.DECISION_INCLUDE_RAW),
         )
 
     def get_db_net_value(self, action: str = "SELECT") -> dict:
